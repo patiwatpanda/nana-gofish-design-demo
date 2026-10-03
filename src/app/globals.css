@@ -1179,6 +1179,7 @@ span.margin-note {
 }
 
 .grade-table-wrap {
+  position: relative; /* contains the visually-hidden cell labels inside the scroller */
   margin-top: clamp(40px, 5vw, 64px);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;

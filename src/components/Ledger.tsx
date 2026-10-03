@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { copy, neoAssets, photoCredits, shopLinks, type Lang } from "./content";
+import { setLang, useLang } from "./lang";
 import {
   Arrow,
   CheckStamp,
@@ -15,38 +16,6 @@ import {
   Wordmark,
   endpaperDataUri,
 } from "./marks";
-
-const LANG_KEY = "nana-lang";
-
-/* The visitor's language lives in a tiny external store so it survives reloads without a hydration mismatch. */
-const langListeners = new Set<() => void>();
-let langMemory: Lang | null = null;
-
-function readLang(): Lang {
-  if (langMemory) return langMemory;
-  try {
-    const saved = window.localStorage.getItem(LANG_KEY);
-    if (saved === "th" || saved === "en") return saved;
-  } catch {
-    /* storage unavailable */
-  }
-  return "en";
-}
-
-function writeLang(next: Lang) {
-  langMemory = next;
-  try {
-    window.localStorage.setItem(LANG_KEY, next);
-  } catch {
-    /* storage unavailable: keep it for this visit only */
-  }
-  langListeners.forEach((fn) => fn());
-}
-
-function subscribeLang(fn: () => void) {
-  langListeners.add(fn);
-  return () => langListeners.delete(fn);
-}
 
 type Photo = { src: string; w: number; h: number; alt: string };
 
@@ -117,16 +86,11 @@ function Pasted({
 }
 
 export default function Ledger() {
-  const lang = useSyncExternalStore(subscribeLang, readLang, () => "en" as Lang);
-  const setLang = writeLang;
+  const lang = useLang();
   const t = copy[lang];
   const openingRef = useRef<HTMLElement>(null);
   const coverRef = useRef<HTMLDivElement>(null);
   const [paperHeader, setPaperHeader] = useState(false);
-
-  useEffect(() => {
-    document.documentElement.lang = lang;
-  }, [lang]);
 
   /* The cover swings open as the visitor scrolls through the opening. */
   useEffect(() => {
